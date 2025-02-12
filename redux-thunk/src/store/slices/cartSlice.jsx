@@ -1,4 +1,26 @@
-import { createSelector, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSelector,
+  createSlice,
+} from "@reduxjs/toolkit";
+
+export const fetchCartItemsData = createAsyncThunk(
+  "cart/fetchCartItems",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch("https://fakestoreapi.com/carts/5");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 
 const findItemIndex = (state, action) => {
   return state.findIndex(
@@ -14,17 +36,6 @@ const cartSlice = createSlice({
     list: [],
   },
   reducers: {
-    fetchCartItems(state) {
-      state.loading = true;
-    },
-    fetchCartItemsError(state, action) {
-      state.loading = false;
-      state.error = action.payload || "Something went wrong!";
-    },
-    loadAllCartItems(state, action) {
-      state.loading = false;
-      state.list = action.payload.products;
-    },
     addToCart(state, action) {
       const existingItemIndex = findItemIndex(state.list, action);
       existingItemIndex !== -1
@@ -47,6 +58,21 @@ const cartSlice = createSlice({
           : state.list.splice(existingItemIndex, 1);
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCartItemsData.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchCartItemsData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload.products;
+        state.error = "";
+      })
+      .addCase(fetchCartItemsData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong!";
+      });
   },
 });
 
@@ -73,9 +99,6 @@ export const {
   removeFromCart,
   decreaseCartItemQTY,
   increaseCartItemQTY,
-  loadAllCartItems,
-  fetchCartItems,
-  fetchCartItemsError,
 } = cartSlice.actions;
 
 export const cartReducer = cartSlice.reducer;

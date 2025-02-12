@@ -2,22 +2,11 @@ import { Link } from "react-router-dom";
 import { Heart, Search, ShoppingCart } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
+import { fetchProductsData } from "../store/slices/productSlice";
 import {
-  fetchProducts,
-  fetchProductsError,
-  loadAllProducts,
-} from "../store/slices/productSlice";
-import {
-  fetchCartItems,
-  fetchCartItemsError,
-  loadAllCartItems,
+  fetchCartItemsData,
 } from "../store/slices/cartSlice";
-import {
-  fetchWishlist,
-  fetchWishlistError,
-  loadAllWishlist,
-} from "../store/slices/wishlistSlice";
-import { fetchData } from "../store/middleware/api";
+import { fetchWishlistData } from "../store/slices/wishlistSlice";
 
 const Header = () => {
   const cartItems = useSelector((state) => state.cartItems.list);
@@ -27,32 +16,9 @@ const Header = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(
-      fetchData({
-        url: "products",
-        onStart: fetchProducts.type,
-        onSuccess: loadAllProducts.type,
-        onError: fetchProductsError.type,
-      })
-    );
-
-    dispatch(
-      fetchData({
-        url: "carts/7",
-        onStart: fetchCartItems.type,
-        onSuccess: loadAllCartItems.type,
-        onError: fetchCartItemsError.type,
-      })
-    );
-
-    dispatch(
-      fetchData({
-        url: "carts/5",
-        onStart: fetchWishlist.type,
-        onSuccess: loadAllWishlist.type,
-        onError: fetchWishlistError.type,
-      })
-    );
+    dispatch(fetchProductsData());
+    dispatch(fetchCartItemsData());
+    dispatch(fetchWishlistData());
   }, [dispatch]);
 
   return (

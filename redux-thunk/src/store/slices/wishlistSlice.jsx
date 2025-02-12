@@ -1,4 +1,26 @@
-import { createSelector, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSelector,
+  createSlice,
+} from "@reduxjs/toolkit";
+
+export const fetchWishlistData = createAsyncThunk(
+  "wishList/fetchWishlist",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch("https://fakestoreapi.com/carts/4");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 
 const findItemIndex = (state, action) =>
   state.findIndex(
@@ -33,6 +55,21 @@ const wishlistSlice = createSlice({
       existingItemIndex !== -1 && state.list.splice(existingItemIndex, 1);
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchWishlistData.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchWishlistData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload.products;
+        state.error = "";
+      })
+      .addCase(fetchWishlistData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong!";
+      });
+  },
 });
 
 const getWishlist = ({ products, wishList }) => {
@@ -53,11 +90,6 @@ export const getAllWishlist = createSelector([getWishlist], (wishList) => [
 export const getWishlistLoadingState = (state) => state.wishList.loading;
 export const getWishlistErrorState = (state) => state.wishList.error;
 
-export const {
-  addToWishlist,
-  removeFromWishlist,
-  loadAllWishlist,
-  fetchWishlist,
-  fetchWishlistError,
-} = wishlistSlice.actions;
+export const { addToWishlist, removeFromWishlist } = wishlistSlice.actions;
+
 export const wishlistReducer = wishlistSlice.reducer;
